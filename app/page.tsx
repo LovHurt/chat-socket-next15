@@ -13,6 +13,10 @@ export default function Home() {
   const [userName, setUserName] = useState("");
 
   useEffect(() => {
+    socket.on("message", (data) => {
+      setMessages((prev) => [...prev, data]);
+    });
+
     socket.on("user_joined", (message) => {
       console.log(message);
       setMessages((prev) => [...prev, { sender: "system", message }]);
@@ -25,12 +29,16 @@ export default function Home() {
   }, []);
 
   const handleJoinRoom = () => {
-    if(room && userName) {
-      socket.emit("join-room", {room, username: userName})
+    if (room && userName) {
+      socket.emit("join-room", { room, username: userName });
       setJoined(true);
     }
   };
   const handleSendMessage = (message: string) => {
+    const data = { room, message, sender: userName };
+
+    setMessages((prev) => [...prev, { sender: userName, message }]);
+    socket.emit("message", data);
     console.log(message);
   };
   return (
@@ -61,7 +69,7 @@ export default function Home() {
         </div>
       ) : (
         <div className="w-full max-w-3xl mx-auto">
-          <h1 className="mb-4 text-2xl font-bold">Room : 1</h1>
+          <h1 className="mb-4 text-2xl font-bold">Room : {room}</h1>
           <div className="h-[500px] overflow-y-auto p-4 mb-4 bg-gray-200 border2 rounded-lg">
             {messages.map((msg, index) => (
               <ChatMessage
